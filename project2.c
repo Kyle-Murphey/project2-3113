@@ -1,11 +1,11 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include "storage.h"
+#include "storage_remote.h"
 
 #define MAX_BUF 128
 #define MAX_ARGS 4
-#define STORAGE_NAME "storage.bin"
+//#define STORAGE_NAME "storage.bin"
 
 /*
  *  Project 2
@@ -195,6 +195,20 @@ int main(int argc, char **argv)
     byte * args[MAX_ARGS] = {0}; //stores arguments from input
     byte ** arg; //pointer to arguments
     byte * checkArgs; //used to check for invalid commands
+    char * STORAGE_NAME = "storage.bin"; //default storage name
+
+    //check for too many args
+    if (argc > 2)
+    {
+        fprintf(stderr, "invalid arguments");
+        exit(-1);
+    }
+    //user specified storage
+    else if (argc == 2)
+    {
+        STORAGE_NAME = argv[1];
+    }
+
     STORAGE * file = init_storage(STORAGE_NAME); //open or create file for storage
 
     //main input loop, continues until EOF
