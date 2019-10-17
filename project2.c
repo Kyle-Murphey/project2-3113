@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include "storage_remote.h"
+#include "comm.h"
 
 #define MAX_BUF 128
 #define MAX_ARGS 4

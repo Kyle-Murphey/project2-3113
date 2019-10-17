@@ -1,7 +1,7 @@
-EXEC=project1
-CFLAGS = -c -O3 -Wall
-LIBS = storage.o
-OTHERS = storage.h
+EXEC=project2
+CFLAGS = -g -Wall
+LIBS = storage.o server.o storage_remote.o 
+OTHERS = storage.h storage_common.h storage_remote.h
 
 all: $(EXEC)
 
@@ -15,12 +15,11 @@ $(EXEC): $(EXEC).o $(LIBS)
 clean:
 	rm -f *.o $(EXEC) $(LIBS)
 
+pipes:
+	mkfifo pipe_in pipe_out
+
 zip:
-	zip project1.zip README.txt project1.c Makefile storage.c storage.h
-
-
-install:
-	cp project1_dist.tar ~/notepad/classes/cs3113/export/projects
+	zip project2.zip README.txt project2.c Makefile storage.c storage.h
 
 tar_release:
-	tar -cvf project1_release.tar Makefile *.h *.c
+	tar -cvf project2_release.tar Makefile *.h *.c

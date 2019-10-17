@@ -7,10 +7,10 @@
  */
 
 /* struct to hold the file descriptor */
-typedef struct 
-{
-  int fd;
-} STORAGE;
+//typedef struct 
+//{
+//  int fd;
+//} STORAGE;
 
 /*
  * opens/creates a file called @name, prints error if it can't open file

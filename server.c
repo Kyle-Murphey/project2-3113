@@ -21,7 +21,19 @@ int main(int argc, char** argv)
     fprintf(stderr, "Waiting for connection with client...\n");
 
     // Open to_storage pipe
-
+    if (fd_in = open(PIPE_NAME_TO_STORAGE, O_RDONLY) == -1)
+    {
+      fprintf(stderr, "Couldn't open pipe\n");
+      exit(-1);
+    }
+    printf("opened pipe\n");
+    /*if (*/read(fd_in, buffer, sizeof(HEADER));// < 0)
+    //{
+      //fprintf(stderr, "Couldn't read header\n");
+      //exit(-1);
+    //}
+    printf("read pipe\n");
+    
 
 
 
