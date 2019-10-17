@@ -211,7 +211,7 @@ int main(int argc, char **argv)
     }
 
     STORAGE * file = init_storage(STORAGE_NAME); //open or create file for storage
-
+    printf("test lmao\n");
     //main input loop, continues until EOF
     while (fgets(input, 50, stdin))
     {

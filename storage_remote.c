@@ -32,19 +32,19 @@ STORAGE * init_storage(char * name)
   }
   sleep(1);
   printf("opened pipe\n");
-
   HEADER * loc = (HEADER*)(&buffer[0]);
   loc = init;
   int open;
   if ((open = write(fd_in, buffer, sizeof(HEADER))) < 0)
   {
+    printf("lmao");
     fprintf(stderr, "Couldn't send message\n");
     exit(-1);
   }
 
   printf("connected to pipe\n");
   sleep(1);
-  close(fd_in);
+  //close(fd_in);
 
   // All okay 
   return s;
@@ -64,7 +64,7 @@ int close_storage(STORAGE *storage)
 
   
   // Free the storage struction
-  //free(storage);
+  free(storage);
 
   // Done
   return(0);
