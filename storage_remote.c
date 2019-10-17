@@ -64,7 +64,7 @@ int close_storage(STORAGE *storage)
 
   
   // Free the storage struction
-  free(storage);
+  //free(storage);
 
   // Done
   return(0);
