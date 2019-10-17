@@ -27,11 +27,11 @@ int main(int argc, char** argv)
       exit(-1);
     }
     printf("opened pipe\n");
-    /*if (*/read(fd_in, buffer, sizeof(HEADER));// < 0)
-    //{
-      //fprintf(stderr, "Couldn't read header\n");
-      //exit(-1);
-    //}
+    if (read(fd_in, buffer, sizeof(HEADER)) < 0)
+    {
+      fprintf(stderr, "Couldn't read header\n");
+      exit(-1);
+    }
     printf("read pipe\n");
     
 

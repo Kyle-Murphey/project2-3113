@@ -44,7 +44,7 @@ STORAGE * init_storage(char * name)
 
   printf("connected to pipe\n");
   sleep(1);
-  //close(fd_in);
+  close(fd_in);
 
   // All okay 
   return s;
