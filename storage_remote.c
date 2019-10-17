@@ -25,17 +25,28 @@ STORAGE * init_storage(char * name)
   init->location = -1;
   init->len_buffer = -1;
 
-  if (fd_in = open(PIPE_NAME_TO_STORAGE, O_WRONLY) == -1)
+  if (fd_in = open("test_pipe", O_WRONLY) < 0)
   {
     fprintf(stderr, "Couldn't open pipe\n");
     exit(-1);
   }
+  printf("opened write pipe\n");
   sleep(1);
-  printf("opened pipe\n");
+/*
+  if (fd_out = open(PIPE_NAME_FROM_STORAGE, O_RDONLY) < 0)
+  {
+    fprintf(stderr, "Couldn't open pipe\n");
+    exit(-1);
+  }
+  printf("opened read pipe\n");
+  sleep(1);
+*/
+ /* read(fd_out, buffer, 10);
+  printf("%s\n", buffer);
+*/
   HEADER * loc = (HEADER*)(&buffer[0]);
   loc = init;
-  int open;
-  if ((open = write(fd_in, buffer, sizeof(HEADER))) < 0)
+  if (write(fd_in, init, sizeof(HEADER)) != sizeof(HEADER))
   {
     printf("lmao");
     fprintf(stderr, "Couldn't send message\n");
@@ -44,6 +55,9 @@ STORAGE * init_storage(char * name)
 
   printf("connected to pipe\n");
   sleep(1);
+
+  //write(fd_in, init, sizeof(HEADER));
+  printf("wrote\n");
   //close(fd_in);
 
   // All okay 
