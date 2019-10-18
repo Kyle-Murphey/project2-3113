@@ -12,7 +12,8 @@ int main(int argc, char** argv)
   HEADER header_out;
   int ret;
   STORAGE *storage;
-  mkfifo("test_pipe", 0666);
+  mkfifo("pipe_in", 0666);
+  mkfifo("pipe_out", 0666);
   int fd_out;
   int fd_in;
 
@@ -21,37 +22,30 @@ int main(int argc, char** argv)
     fprintf(stderr, "Waiting for connection with client...\n");
 
     // Open to_storage pipe
-    if (fd_in = open("test_pipe", O_RDONLY) == -1)
+    fd_in = open(PIPE_NAME_TO_STORAGE, O_RDONLY);
+    if (fd_in == -1)
     {
       fprintf(stderr, "Couldn't open pipe\n");
       exit(-1);
     }
     printf("opened read pipe\n");
-    /*if (fd_out = open(PIPE_NAME_FROM_STORAGE, O_WRONLY) == -1)
-    {
-      fprintf(stderr, "Couldn't open pipe\n");
-      exit(-1);
-    }
-    printf("opened write pipe\n");
 
-    char buf[10] = "ayy lmao";
+    int reader = read(fd_in, &header, sizeof(HEADER));
 
-    if (write(fd_out, buf, sizeof(buf)) < 0)
-    {
-      printf("fail\n");
-    }*/
-
-    if (read(fd_in, &header, sizeof(HEADER)) == sizeof(HEADER))
-    {
-      fprintf(stdout, "actually read something lmao\n");
-    }
-
-    if (read(fd_in, &header, sizeof(HEADER)) < 0)
+    if (reader != sizeof(HEADER))
     {
       fprintf(stderr, "Couldn't read header\n");
       exit(-1);
     }
     printf("read pipe\n");
+
+    if (header.type == INIT_CONNECTION)
+    {
+      while(1)
+      {
+        sleep(5);
+      }
+    }
     
 
 

@@ -17,7 +17,7 @@ STORAGE * init_storage(char * name)
   STORAGE *s = malloc(sizeof(STORAGE));
   HEADER *init = malloc(sizeof(HEADER));
   char *buffer = malloc(sizeof(HEADER));
-  int fd_in;
+  int fd_in = -1;
   int fd_out;
 
   init->type = INIT_CONNECTION;
@@ -25,40 +25,26 @@ STORAGE * init_storage(char * name)
   init->location = -1;
   init->len_buffer = -1;
 
-  if (fd_in = open("test_pipe", O_WRONLY) < 0)
+  fd_in = open(PIPE_NAME_TO_STORAGE, O_WRONLY);
+
+  if (fd_in < 0)
   {
     fprintf(stderr, "Couldn't open pipe\n");
     exit(-1);
   }
-  printf("opened write pipe\n");
+  printf("opened write pipe | fd_in:%d\n", fd_in);
   sleep(1);
-/*
-  if (fd_out = open(PIPE_NAME_FROM_STORAGE, O_RDONLY) < 0)
-  {
-    fprintf(stderr, "Couldn't open pipe\n");
-    exit(-1);
-  }
-  printf("opened read pipe\n");
-  sleep(1);
-*/
- /* read(fd_out, buffer, 10);
-  printf("%s\n", buffer);
-*/
-  HEADER * loc = (HEADER*)(&buffer[0]);
-  loc = init;
-  if (write(fd_in, init, sizeof(HEADER)) != sizeof(HEADER))
+
+  int written = write(fd_in, init, sizeof(HEADER));
+  if ( written != sizeof(HEADER))
   {
     printf("lmao");
     fprintf(stderr, "Couldn't send message\n");
     exit(-1);
   }
-
+  printf("%d\n", written);
   printf("connected to pipe\n");
   sleep(1);
-
-  //write(fd_in, init, sizeof(HEADER));
-  printf("wrote\n");
-  //close(fd_in);
 
   // All okay 
   return s;
