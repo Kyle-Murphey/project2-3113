@@ -12,8 +12,6 @@ int main(int argc, char** argv)
   HEADER header_out;
   int ret;
   STORAGE *storage;
-  mkfifo("pipe_in", 0666);
-  mkfifo("pipe_out", 0666);
   int fd_out;
   int fd_in;
 
@@ -29,18 +27,78 @@ int main(int argc, char** argv)
       exit(-1);
     }
     printf("opened read pipe\n");
+    ///
 
+    //open write pipe
+    fd_out = open(PIPE_NAME_FROM_STORAGE, O_WRONLY);
+    if (fd_out == -1)
+    {
+      fprintf(stderr, "Couldn't open pipe\n");
+      exit(-1);
+    }
+    printf("opened write pipe\n");
+    ///
+
+    //read ACK
     int reader = read(fd_in, &header, sizeof(HEADER));
-
     if (reader != sizeof(HEADER))
     {
       fprintf(stderr, "Couldn't read header\n");
       exit(-1);
     }
     printf("read pipe\n");
+    ///
 
+    //init connection
     if (header.type == INIT_CONNECTION)
     {
+      /* create array to hold file name */
+      char name[header.len_message + 1];
+      memset(name, 0, sizeof(name));
+
+      //get file name
+      reader = read(fd_in, name, header.len_message);
+      if (reader != header.len_message)
+      {
+        fprintf(stderr, "Couldn't get file name\n");
+        exit(-1);
+      }
+      printf("got file name\n");
+      ///
+
+      //create/find file
+      storage = malloc(sizeof(STORAGE));
+      storage = init_storage(name);
+
+      header_out.len_message = sizeof(storage);
+      header_out.type = ACKNOWLEDGE;
+      header_out.len_buffer = -1;
+      header_out.location = -1;
+      sleep(1);
+
+      //send ack
+      int written = write(fd_out, &header_out, header_out.len_message);
+      if (written != header_out.len_message)
+      {
+        fprintf(stderr, "Couldn't send ACK\n");
+        exit(-1);
+      }
+      printf("ACKNOWLEDGE sent\n");
+      ///
+
+      //send file to client
+      written = write(fd_out, storage, sizeof(storage));
+      printf("size of written: %d\n", written);
+      printf("STORAGE: %ld\n", sizeof(STORAGE));
+      printf("storage: %ld\n", sizeof(storage));
+      if (written != sizeof(storage))
+      {
+        fprintf(stderr, "Couldn't send file\n");
+        exit(-1);
+      }
+      printf("sent file\n");
+      ///
+
       while(1)
       {
         sleep(5);

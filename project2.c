@@ -205,13 +205,13 @@ int main(int argc, char **argv)
         exit(-1);
     }
     //user specified storage
-    else if (argc == 2)
+    else if (argc == 2 && argv[1] != "")
     {
         STORAGE_NAME = argv[1];
     }
 
     STORAGE * file = init_storage(STORAGE_NAME); //open or create file for storage
-    printf("test lmao\n");
+
     //main input loop, continues until EOF
     while (fgets(input, 50, stdin))
     {

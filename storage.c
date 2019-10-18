@@ -21,7 +21,7 @@ STORAGE * init_storage(char * name)
 {
     STORAGE * file = malloc(sizeof(STORAGE)); //allocates space for the file
     file->fd = open(name, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR); //opens/creates the file
-
+    
     //error opening/creating
     if (file->fd == -1)
     {
