@@ -46,7 +46,7 @@ int main(int argc, char** argv)
       fprintf(stderr, "Couldn't read header\n");
       exit(-1);
     }
-    printf("read pipe\n");
+    printf("Connection established\n");
     ///
 
     //init connection
@@ -74,7 +74,6 @@ int main(int argc, char** argv)
       header_out.type = ACKNOWLEDGE;
       header_out.len_buffer = -1;
       header_out.location = -1;
-      sleep(1);
 
       //send ack
       int written = write(fd_out, &header_out, header_out.len_message);
@@ -88,9 +87,6 @@ int main(int argc, char** argv)
 
       //send file to client
       written = write(fd_out, storage, sizeof(storage));
-      printf("size of written: %d\n", written);
-      printf("STORAGE: %ld\n", sizeof(STORAGE));
-      printf("storage: %ld\n", sizeof(storage));
       if (written != sizeof(storage))
       {
         fprintf(stderr, "Couldn't send file\n");
@@ -99,14 +95,115 @@ int main(int argc, char** argv)
       printf("sent file\n");
       ///
 
-      while(1)
+      while(header.type != SHUTDOWN)
       {
-        sleep(5);
+        //get header to process client's request
+        reader = read(fd_in, &header, sizeof(HEADER));
+        if (reader != sizeof(HEADER))
+        {
+          fprintf(stderr, "Couldn't read header\n");
+          exit(-1);
+        }
+        printf("Recieved HEADER\n");
+        ///
+
+        //client requesting to send data to the file
+        if (header.type == WRITE_REQUEST)
+        {
+          //get data to write to file
+          reader = read(fd_in, buffer, header.len_message);
+          if (reader != header.len_message)
+          {
+            fprintf(stderr, "Couldn't get data to write\n");
+            exit(-1);
+          }
+          printf("Recieved data to write\n");
+          ///
+
+          //writing bytes to the file
+          written = put_bytes(storage, buffer, header.location, header.len_buffer);
+          if (written != header.len_message)
+          {
+            fprintf(stderr, "Couldn't write to the file\n");
+            exit(-1);
+          }
+          printf("File written to\n");
+          ///
+
+          //send ACK to client
+          header_out.len_message = 0;
+          written = write(fd_out, &header_out, sizeof(HEADER));
+          if (written != sizeof(HEADER))
+          {
+            fprintf(stderr, "Couldn't send ACK\n");
+            exit(-1);
+          }
+          printf("Sent ACKNOWLEDGE\n");
+          ///
+        }
+        else if (header.type == READ_REQUEST)
+        {
+          //get READ_REQUEST header
+          /*int reader = read(fd_in, &header, sizeof(HEADER));
+          if (reader != sizeof(HEADER))
+          {
+            fprintf(stderr, "Couldn't read header\n");
+            exit(-1);
+          }
+          printf("got READ_REQ\n");*/
+          ///
+
+          //reads the bytes from the file
+          reader = get_bytes(storage, buffer, header.location, header.len_buffer);
+          if (reader != header.len_buffer)
+          {
+            fprintf(stderr, "Couldn't read from file\n");
+            exit(-1);
+          }
+          printf("data read from file\n");
+          ///
+
+          header_out.type = DATA;
+          header_out.len_message = header.len_buffer;
+          header_out.location = header.location;
+          header_out.len_buffer = header.len_buffer;
+
+          //sends the DATA header
+          int written = write(fd_out, &header_out, sizeof(HEADER));
+          if (written != sizeof(HEADER))
+          {
+            fprintf(stderr, "Couldn't send DATA\n");
+            exit(-1);
+          }
+          printf("sent DATA\n");
+          ///
+
+          //send data to the client buffer
+          written = write(fd_out, buffer, header_out.len_message);
+          if (written != header_out.len_message)
+          {
+            fprintf(stderr, "Couldn't send requested data\n");
+            exit(-1);
+          }
+          printf("sent data\n");
+          ///
+
+        }
+        else if (header.type == SHUTDOWN)
+        {
+
+        }
+        else
+        {
+          fprintf(stderr, "Bad header\n");
+          exit(-1);
+        }
+        
       }
     }
     
 
-
+    sleep(1);
 
 
 

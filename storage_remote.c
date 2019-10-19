@@ -53,7 +53,7 @@ STORAGE * init_storage(char * name)
     fprintf(stderr, "Couldn't send header\n");
     exit(-1);
   }
-  printf("send init\n");
+  printf("sent init\n");
   ///
 
   //give server file name
@@ -73,20 +73,16 @@ STORAGE * init_storage(char * name)
     printf("got ACKNOWLEDGE\n");
     //get file
     reader = read(fd_out, s, init->len_message); //error check
-    printf("%d number of bytes read\n", reader);
-    printf("%d init message length\n",init->len_message);
-    if (reader != init->len_message) //STORAGE different
+    if (reader != init->len_message)
     {
       fprintf(stderr, "Couldn't get file\n");
       exit(-1);
     }
-    printf("got file\n");    
+    printf("got file\n");   
+    s->fd_to_storage = fd_in;
+    s->fd_from_storage = fd_out; 
   }
   ///
-
-  printf("%d\n", written);
-  printf("connected to pipe\n");
-  sleep(1);
 
   // All okay 
   return s;
@@ -117,8 +113,42 @@ int close_storage(STORAGE *storage)
  */
 int get_bytes(STORAGE *storage, unsigned char *buf, int location, int len)
 {
+  HEADER * read_req = malloc(sizeof(HEADER));
 
+  read_req->type = READ_REQUEST;
+  read_req->len_message = 0;
+  read_req->location = location;
+  read_req->len_buffer = len;
 
+  //send READ message
+  int written = write(storage->fd_to_storage, read_req, sizeof(HEADER));
+  if (written != sizeof(HEADER))
+  {
+    fprintf(stderr, "Couldn't send READ_REQUEST\n");
+    exit(-1);
+  }
+  printf("READ_REQUEST sent\n");
+  ///
+
+  //get DATA header
+  int reader = read(storage->fd_from_storage, read_req, sizeof(HEADER));
+  if (reader != sizeof(HEADER))
+  {
+    fprintf(stderr, "Couldn't get DATA message\n");
+    exit(-1);
+  }
+  printf("Recieved DATA\n");
+  ///
+
+  //get the data from the server
+  reader = read(storage->fd_from_storage, buf, read_req->len_message);
+  if (reader != read_req->len_message)
+  {
+    fprintf(stderr, "Couldn't read from file\n");
+    exit(-1);
+  }
+  printf("Data read\n");
+  ///
 
   // Success
   return(len);
@@ -132,8 +162,42 @@ int get_bytes(STORAGE *storage, unsigned char *buf, int location, int len)
  */
 int put_bytes(STORAGE *storage, unsigned char *buf, int location, int len)
 {
+  HEADER * write_req = malloc(sizeof(HEADER));
 
+  write_req->type = WRITE_REQUEST;
+  write_req->len_message = 128;
+  write_req->location = location;
+  write_req->len_buffer = len;
 
+  //send WRITE_REQUEST to server
+  int written = write(storage->fd_to_storage, write_req, sizeof(HEADER));
+  if (written != sizeof(HEADER))
+  {
+    fprintf(stderr, "Couldn't send WRITE_REQUEST\n");
+    exit(-1);
+  }
+  printf("sent WRITE\n");
+  ///
+
+  //send data to be written to server
+  written = write(storage->fd_to_storage, buf, write_req->len_message);
+  if (written != write_req->len_message)
+  {
+    fprintf(stderr, "Couldn't send data\n");
+    exit(-1);
+  }
+  printf("sent data\n");
+  ///
+
+  //get ACK from server
+  int reader = read(storage->fd_from_storage, write_req, sizeof(HEADER));
+  if (write_req->type != ACKNOWLEDGE)
+  {
+    fprintf(stderr, "Couldn't get ACK\n");
+    exit(-1);
+  }
+  printf("Got ACK\n");
+  ///
 
   // Success
   return(len);
