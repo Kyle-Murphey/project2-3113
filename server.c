@@ -103,7 +103,7 @@ int main(int argc, char** argv)
       while(1)
       {
         //get header to process client's request
-        reader = read(fd_in, &header, sizeof(HEADER));
+        int reader = read(fd_in, &header, sizeof(HEADER));
         if (reader != sizeof(HEADER))
         {
           fprintf(stderr, "Couldn't read header\n");
