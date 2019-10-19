@@ -29,7 +29,7 @@ pipes:
 	mkfifo pipe_in pipe_out
 
 zip:
-	zip project2.zip README.txt project2.c Makefile storage.c storage.h
+	zip project2.zip README.txt project2.c Makefile storage.c storage.h server.c storage_remote.c storage_remote.h comm.h storage_common.h
 
 tar_release:
 	tar -cvf project2_release.tar Makefile *.h *.c
