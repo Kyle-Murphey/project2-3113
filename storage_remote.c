@@ -7,6 +7,13 @@
 #include "comm.h"
 
 /**
+ * Kyle Murphey
+ * Project 2
+ * 
+ * Documentation for the parameters can be found in storage.c
+ */
+
+/**
    initialize the storage
 
    Open the two fds (in and out), wait for an init message, initialize the local storage
@@ -15,9 +22,9 @@ STORAGE * init_storage(char * name)
 {
   // Create space for the STORAGE object
   STORAGE *s = malloc(sizeof(STORAGE));
-  HEADER *init = malloc(sizeof(HEADER));
-  int fd_in;
-  int fd_out;
+  HEADER *init = malloc(sizeof(HEADER)); //header for init message
+  int fd_in; //pipe_in
+  int fd_out; //pipe_out
 
   init->type = INIT_CONNECTION;
   init->len_message = strlen(name);
@@ -31,8 +38,6 @@ STORAGE * init_storage(char * name)
     fprintf(stderr, "Couldn't open pipe\n");
     exit(-1);
   }
-  printf("opened write pipe | fd_in:%d\n", fd_in);
-  sleep(1);
   ///
 
   //opening reading pipe
@@ -42,8 +47,6 @@ STORAGE * init_storage(char * name)
     fprintf(stderr, "Couldn't open pipe\n");
     exit(-1);
   }
-  printf("opened read pipe | fd_out:%d\n", fd_out);
-  sleep(1);
   ///
 
   //sending init message and then the name of the file
@@ -53,7 +56,6 @@ STORAGE * init_storage(char * name)
     fprintf(stderr, "Couldn't send header\n");
     exit(-1);
   }
-  printf("sent init\n");
   ///
 
   //give server file name
@@ -63,14 +65,12 @@ STORAGE * init_storage(char * name)
   fprintf(stderr, "Couldn't send file name\n");
   exit(-1);
   }
-  printf("name written\n");
   ///
 
   //get ack
   int reader = read(fd_out, init, sizeof(HEADER));  //error check
   if (init->type == ACKNOWLEDGE)
   {
-    printf("got ACKNOWLEDGE\n");
     //get file
     reader = read(fd_out, s, init->len_message); //error check
     if (reader != init->len_message)
@@ -78,12 +78,11 @@ STORAGE * init_storage(char * name)
       fprintf(stderr, "Couldn't get file\n");
       exit(-1);
     }
-    printf("got file\n");   
+    //setting fds to the pipes 
     s->fd_to_storage = fd_in;
     s->fd_from_storage = fd_out; 
   }
   ///
-
   // All okay 
   return s;
 };
@@ -96,9 +95,30 @@ STORAGE * init_storage(char * name)
 int close_storage(STORAGE *storage)
 {
   // Create the shutdown message
-  HEADER header;
+  HEADER * header = malloc(sizeof(HEADER));
 
+  header->type = SHUTDOWN;
+  header->len_message = 0;
+  header->location = -1;
+  header->len_buffer = -1;
 
+  //send SHUTDOWN header
+  int written = write(storage->fd_to_storage, header, sizeof(HEADER));
+  if (written != sizeof(HEADER))
+  {
+    fprintf(stderr, "Couldn't send SHUTDOWN\n");
+    exit(-1);
+  }
+  ///
+
+  ///get ACK from server
+  int reader = read(storage->fd_from_storage, header, sizeof(HEADER));
+  if (reader != sizeof(HEADER))
+  {
+    fprintf(stderr, "Couldn't get ACK\n");
+    return -1;
+  }
+  ///
 
   
   // Free the storage struction
@@ -127,7 +147,6 @@ int get_bytes(STORAGE *storage, unsigned char *buf, int location, int len)
     fprintf(stderr, "Couldn't send READ_REQUEST\n");
     exit(-1);
   }
-  printf("READ_REQUEST sent\n");
   ///
 
   //get DATA header
@@ -137,7 +156,6 @@ int get_bytes(STORAGE *storage, unsigned char *buf, int location, int len)
     fprintf(stderr, "Couldn't get DATA message\n");
     exit(-1);
   }
-  printf("Recieved DATA\n");
   ///
 
   //get the data from the server
@@ -147,7 +165,6 @@ int get_bytes(STORAGE *storage, unsigned char *buf, int location, int len)
     fprintf(stderr, "Couldn't read from file\n");
     exit(-1);
   }
-  printf("Data read\n");
   ///
 
   // Success
@@ -176,7 +193,6 @@ int put_bytes(STORAGE *storage, unsigned char *buf, int location, int len)
     fprintf(stderr, "Couldn't send WRITE_REQUEST\n");
     exit(-1);
   }
-  printf("sent WRITE\n");
   ///
 
   //send data to be written to server
@@ -186,7 +202,6 @@ int put_bytes(STORAGE *storage, unsigned char *buf, int location, int len)
     fprintf(stderr, "Couldn't send data\n");
     exit(-1);
   }
-  printf("sent data\n");
   ///
 
   //get ACK from server
@@ -196,10 +211,8 @@ int put_bytes(STORAGE *storage, unsigned char *buf, int location, int len)
     fprintf(stderr, "Couldn't get ACK\n");
     exit(-1);
   }
-  printf("Got ACK\n");
   ///
 
   // Success
   return(len);
 };
-

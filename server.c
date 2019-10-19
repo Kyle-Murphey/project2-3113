@@ -2,6 +2,10 @@
 #include "comm.h"
 #include "storage_common.h"
 #include <string.h>
+/*
+* Kyle Murphey
+* Project 2
+*/
 
 #define BUFSIZE 200
 
@@ -95,7 +99,8 @@ int main(int argc, char** argv)
       printf("sent file\n");
       ///
 
-      while(header.type != SHUTDOWN)
+      //client loop
+      while(1)
       {
         //get header to process client's request
         reader = read(fd_in, &header, sizeof(HEADER));
@@ -130,8 +135,12 @@ int main(int argc, char** argv)
           printf("File written to\n");
           ///
 
-          //send ACK to client
+          header_out.type = ACKNOWLEDGE;
           header_out.len_message = 0;
+          header_out.len_buffer = -1;
+          header_out.location = -1;
+
+          //send ACK to client
           written = write(fd_out, &header_out, sizeof(HEADER));
           if (written != sizeof(HEADER))
           {
@@ -141,18 +150,9 @@ int main(int argc, char** argv)
           printf("Sent ACKNOWLEDGE\n");
           ///
         }
+        //client requesting data from the file
         else if (header.type == READ_REQUEST)
         {
-          //get READ_REQUEST header
-          /*int reader = read(fd_in, &header, sizeof(HEADER));
-          if (reader != sizeof(HEADER))
-          {
-            fprintf(stderr, "Couldn't read header\n");
-            exit(-1);
-          }
-          printf("got READ_REQ\n");*/
-          ///
-
           //reads the bytes from the file
           reader = get_bytes(storage, buffer, header.location, header.len_buffer);
           if (reader != header.len_buffer)
@@ -187,25 +187,35 @@ int main(int argc, char** argv)
           }
           printf("sent data\n");
           ///
-
         }
+        //client disconnects
         else if (header.type == SHUTDOWN)
         {
+          header_out.type = ACKNOWLEDGE;
+          header_out.len_message = 0;
+          header_out.len_buffer = -1;
+          header_out.location = -1;
 
+          //send ACK to client
+          int written = write(fd_out, &header_out, sizeof(HEADER));
+          if (written != sizeof(HEADER))
+          {
+            fprintf(stderr, "Couldn't send ACK\n");
+            exit(-1);
+          }
+          printf("ACK sent\n");
+          ///
+
+          sleep(1);
+          break;
         }
         else
         {
           fprintf(stderr, "Bad header\n");
           exit(-1);
         }
-        
       }
     }
-    
-
-    sleep(1);
-
-
 
     // We broke out because of a disconnection: clean up
     fprintf(stderr, "Closing connection\n");
@@ -214,6 +224,7 @@ int main(int argc, char** argv)
     close_storage(storage);
   }
 
+  free(storage);
   // Should never reach here
   return(0);
 }
